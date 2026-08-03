@@ -108,7 +108,7 @@ plot_grid <- function(grid) {
     pur_width  <- min(diff(sort(unique(grid$purity))))
     plo_height <- min(diff(sort(unique(grid$ploidy))))
     minima <- find_local_minima(grid)
-    
+
     ggplot(grid, aes(purity, ploidy, fill = -log10(result+1))) +
         geom_tile(width = pur_width, height = plo_height) +
         geom_point(data = minima[seq_len(min(10, nrow(minima))), ],
@@ -163,7 +163,7 @@ GridSearch <- R6Class(
             self$copynumber_calculator <- copynumber_calculator
             self$segmentation <- segmentation
             self$nonneg_pen_lambda <- nonneg_pen_lambda
-        },    
+        },
 
         #' @description
         #' Perform a grid search over the specified ranges of tumour purity and ploidy values.
@@ -175,8 +175,8 @@ GridSearch <- R6Class(
                 purity_range = c(0.1, 1.0),
                 ploidy_range = c(1, 8),
                 purity_step = 0.01,
-                ploidy_step = 0.05,
-        ) {
+                ploidy_step = 0.05
+                ) {
             grid_search(
                 self$copynumber_calculator,
                 self$segmentation,
@@ -197,7 +197,7 @@ GridSearch <- R6Class(
         optimise_around_point = function(
                 startval,
                 lower_bound = c(0, 1),
-                upper_bound = c(1, 8),
+                upper_bound = c(1, 8)
         ) {
             neldermead(
                 startval,
@@ -207,7 +207,7 @@ GridSearch <- R6Class(
                 upper_bound,
                 self$nonneg_pen_lambda
             )
-        }
+        },
 
         #' @description
         #' Find local minima in the grid search results.
