@@ -55,7 +55,7 @@ find_local_minima <- function(grid) {
         mins
     )
     colnames(result) <- c("purity", "ploidy", "result")
-    result[order(result[, 3]), ]
+    result[order(result[, 3]), , drop=FALSE]
 }
 
 #' @export
@@ -108,10 +108,16 @@ plot_grid <- function(grid) {
     pur_width  <- min(diff(sort(unique(grid$purity))))
     plo_height <- min(diff(sort(unique(grid$ploidy))))
     minima <- find_local_minima(grid)
+    minima_top <- minima[seq_len(min(10, nrow(minima))), ]
+    point_data <- if (nrow(minima_top) == 1) {
+        as.data.frame(t(minima_top))
+    } else {
+        as.data.frame(minima_top)
+    }
 
     ggplot(grid, aes(purity, ploidy, fill = -log10(result+1))) +
         geom_tile(width = pur_width, height = plo_height) +
-        geom_point(data = minima[seq_len(min(10, nrow(minima))), ],
+        geom_point(data = point_data,
                    aes(purity, ploidy, size = -log10(result+1)),
                    inherit.aes = FALSE,
                    shape = 3,
