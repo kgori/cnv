@@ -14,7 +14,7 @@
 #' Usage:
 #' cnc <- CopyNumberCalculator$new(R, host_copynumber, host_ploidy, panel_copynumber, panel_ploidy) \cr
 #' n <- cnc$copynumber(purity, ploidy)
-#' 
+#'
 #' @importFrom "R6" R6Class
 #' @export
 CopyNumberCalculator <- R6Class(
@@ -23,7 +23,7 @@ CopyNumberCalculator <- R6Class(
         #' @field alpha The alpha parameter for the copy number calculation.
         #' Computed once and reused for any purity and ploidy.
         alpha = NULL,
-        
+
         #' @field beta The beta parameter for the copy number calculation
         #' Computed once and reused for any purity and ploidy.
         beta = NULL,
@@ -32,7 +32,7 @@ CopyNumberCalculator <- R6Class(
         #' Constructor. Builds new CopyNumberCalculator using read depth ratio and host/panel parameters.
         #' @param R Read depth ratio of tumour mixture relative to panel of normals.
         #' @param host_copynumber The expected integer copy number of each locus for the mixed host
-        #' @param host_ploidy The expected average copy number of the mixed host, e.g. 2 for diploid
+        #' @param host_ploidy The expected average autosomal copy number of the mixed host, e.g. 2 for diploid
         #' @param panel_copynumber The expected integer copy number of each locus for the panel of normals
         #' @param panel_ploidy The expected average copy number of the panel of normals
         initialize = function(
