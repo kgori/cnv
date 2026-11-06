@@ -34,6 +34,7 @@ objective_maker <- function(cncalculator, segmentation, lambda) {
 
 #' @export
 find_local_minima <- function(grid) {
+    grid <- add_border(grid)
     purities <- sort(unique(grid$purity))
     ploidies <- sort(unique(grid$ploidy))
     nr <- length(purities)
@@ -166,6 +167,22 @@ GridSearch <- R6Class(
                 nonneg_pen_lambda = 0
                 ) {
             stopifnot(nonneg_pen_lambda >= 0 & nonneg_pen_lambda <= 1)
+
+            # Check segmentation boundaries are disjoint!
+            starts_strictly_increasing <- all(diff(segmentation$starts) > 0)
+            ends_strictly_increasing <- all(diff(segmentation$ends) > 0)
+            if (!starts_strictly_increasing | !ends_strictly_increasing) {
+                msg <- paste("Segments are not disjoint! Found overlapping start and/or end positions.",
+                             "Ensure the start and end positions are proper indexes into the data,",
+                             "and cover all positions.")
+                stop(msg)
+            }
+
+            # Check index bounds of segmentation (a weak check, as for a complete
+            # segmentation max(ends) should be exactly sum(lengths), and min(starts)
+            # should be 1)
+            stopifnot(max(segmentation$ends) <= sum(segmentation$lengths) & min(segmentation$starts >= 1))
+
             self$copynumber_calculator <- copynumber_calculator
             self$segmentation <- segmentation
             self$nonneg_pen_lambda <- nonneg_pen_lambda
@@ -223,3 +240,48 @@ GridSearch <- R6Class(
         }
     )
 )
+
+find_step_size <- function(v) {
+    unique(round(diff(unique(sort(round(v, 9)))), 9))
+}
+
+create_border <- function(grid) {
+    ploidy_step <- find_step_size(grid$ploidy)
+    purity_step <- find_step_size(grid$purity)
+    ploidy_range <- range(grid$ploidy)
+    purity_range <- range(grid$purity)
+    bottom_strip <- expand.grid(purity = seq(min(purity_range) - purity_step,
+                                             max(purity_range) + purity_step,
+                                             purity_step),
+                                ploidy = min(ploidy_range) - ploidy_step)
+    top_strip    <- expand.grid(purity = seq(min(purity_range) - purity_step,
+                                             max(purity_range) + purity_step,
+                                             purity_step),
+                                ploidy = max(ploidy_range) + ploidy_step)
+    left_strip   <- expand.grid(purity = min(purity_range) - purity_step,
+                                ploidy = seq(min(ploidy_range),
+                                             max(ploidy_range),
+                                             ploidy_step))
+    right_strip  <- expand.grid(purity = max(purity_range) + purity_step,
+                                ploidy = seq(ploidy_range[1],
+                                             ploidy_range[2],
+                                             ploidy_step))
+    border <- rbind(bottom_strip, top_strip, left_strip, right_strip)
+    border$result <- max(grid$result) + 1
+    border
+}
+
+add_border <- function(grid) {
+    new_grid <- rbind(create_border(grid), grid)
+    new_grid$ploidy <- round(new_grid$ploidy, 1+rounding_level(find_step_size(new_grid$ploidy)))
+    new_grid$purity <- round(new_grid$purity, 1+rounding_level(find_step_size(new_grid$purity)))
+    setorder(new_grid, ploidy, purity)
+    new_grid
+}
+
+rounding_level <- function(x, e = 0) {
+    if (x*10^e >= 1) { return (e) }
+    if (e > 16) { stop("excessive") }
+    return (rounding_level(x, e+1))
+}
+
