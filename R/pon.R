@@ -76,8 +76,8 @@ sample_copynumber <- function(cn_female, cn_male, sex) {
 #' @importFrom "logging" logwarn
 #' @importFrom "stats" median quantile
 #' @export
-SexAgnosticPanelOfNormals = R6Class(
-    "SexAgnosticPanelOfNormals",
+MixedSexPanelOfNormals = R6Class(
+    "MixedSexPanelOfNormals",
 
     public=list(
 
@@ -108,6 +108,9 @@ SexAgnosticPanelOfNormals = R6Class(
         #' @field U Result of Singular Value Decomposition of processed host read counts,
         #' used for denoising tumour logR.
         U = NULL,
+
+        #' @field V Result of Singular Value Decomposition of processed host read counts
+        V = NULL,
 
         #' @field D Singular Values of the decomposition
         D = NULL,
@@ -157,7 +160,7 @@ SexAgnosticPanelOfNormals = R6Class(
 
             sex <- check_sex(sex, ncol(host_matrix))
             if (verbose) {
-                cat("sex labels and input matrix sizes are compatible\n")
+                cat("Sex labels and input matrix sizes are compatible\n")
             }
 
             for (cn in list(copynumber_female, copynumber_male)) {
@@ -217,23 +220,23 @@ SexAgnosticPanelOfNormals = R6Class(
                 cat("Computing the denoising basis by SVD\n")
             }
             if (verbose) {
-                cat(" - Calculating ratios\n")
+                cat(" - (1/9) Calculating ratios\n")
             }
             # Same as x <- self$ratio(host_matrix), but do it inline to avoid recomputing size_factors
             x <- sweep(host_matrix, 2, size_factors, "/")
             x <- sweep(x, 1, ref, "/")
             if (verbose) {
-                cat(" - Scaling to panel copy number\n")
+                cat(" - (2/9) Scaling to panel copy number\n")
             }
             x <- x / (cn / cn_panel)
             if (verbose) {
-                cat(" - Masking loci with expected copy number of 0 (setting to NA)\n")
+                cat(" - (3/9) Masking loci with expected copy number of 0 (setting to NA)\n")
             }
             x[cn == 0] <- NA
 
             # winsorise (NAs ignored when finding quantiles, and left as NA)
             if (verbose) {
-                cat(" - Winsorization\n")
+                cat(" - (4/9) Winsorization\n")
             }
             x <- apply(x, 2, function(col) clip(col,
                                                 quantile(col, winsorization_quantile, na.rm = TRUE),
@@ -241,33 +244,44 @@ SexAgnosticPanelOfNormals = R6Class(
 
             # impute missing coverage (zeros) with the locus median
             if (verbose) {
-                cat(" - Imputation of missing values\n")
+                cat(" - (5/9) Imputation of missing values\n")
             }
             ix <- which(x == 0, arr.ind = TRUE)
             x[ix] <- rowMedians(x, na.rm = TRUE)[ix[, "row"]]
 
             # renormalise on autosomal / PAR loci
             if (verbose) {
-                cat(" - Renormalising\n")
+                cat(" - (6/9) Renormalising\n")
             }
             x <- sweep(x, 2, colMedians(x[self$is_auto, , drop = FALSE]), "/")
 
             # move to log space; absent entries are neutral (logR 0)
             if (verbose) {
-                cat(" - Moving to log space\n")
+                cat(" - (7/9) Moving to log space\n")
             }
             x <- safelog2(x)
+
+            # centre each chromosome per sample to avoid sex-bias on X/Y
+            if (verbose) {
+                cat(" - (8/9) Applying whole chromosome shift to avoid sex-bias\n")
+            }
+            for (rows in split(seq_len(n_loci), loci$CHROM)) {
+                x[rows, ] <- sweep(x[rows, , drop = FALSE], 2,
+                                   colMeans(x[rows, , drop = FALSE], na.rm = TRUE), "-")
+            }
+
             x[is.na(x)] <- 0
 
             stopifnot(is.matrix(x))
 
             # decompose
             if (verbose) {
-                cat(" - Computing SVD\n")
+                cat(" - (9/9) Computing SVD\n")
             }
             decomp <- irlba(x, max_svs)
-            self$U = decomp$u
-            self$D = decomp$d
+            self$U <- decomp$u
+            self$V <- decomp$v
+            self$D <- decomp$d
         },
 
         #' @description

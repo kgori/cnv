@@ -21,6 +21,8 @@ n <- cnc$copynumber(purity, ploidy)
 \section{Public fields}{
   \if{html}{\out{<div class="r6-fields">}}
   \describe{
+    \item{\code{R}}{The read ratio}
+
     \item{\code{alpha}}{The alpha parameter for the copy number calculation.
 Computed once and reused for any purity and ploidy.}
 
@@ -58,7 +60,7 @@ Computed once and reused for any purity and ploidy.}
     \describe{
       \item{\code{R}}{Read depth ratio of tumour mixture relative to panel of normals.}
       \item{\code{host_copynumber}}{The expected integer copy number of each locus for the mixed host}
-      \item{\code{host_ploidy}}{The expected average copy number of the mixed host, e.g. 2 for diploid}
+      \item{\code{host_ploidy}}{The expected average autosomal copy number of the mixed host, e.g. 2 for diploid}
       \item{\code{panel_copynumber}}{The expected integer copy number of each locus for the panel of normals}
       \item{\code{panel_ploidy}}{The expected average copy number of the panel of normals}
     }

@@ -109,12 +109,8 @@ plot_grid <- function(grid) {
     pur_width  <- min(diff(sort(unique(grid$purity))))
     plo_height <- min(diff(sort(unique(grid$ploidy))))
     minima <- find_local_minima(grid)
-    minima_top <- minima[seq_len(min(10, nrow(minima))), ]
-    point_data <- if (nrow(minima_top) == 1) {
-        as.data.frame(t(minima_top))
-    } else {
-        as.data.frame(minima_top)
-    }
+    minima_top <- minima[seq_len(min(10, nrow(minima))), , drop = FALSE]
+    point_data <- as.data.frame(minima_top)
 
     ggplot(grid, aes(purity, ploidy, fill = -log10(result+1))) +
         geom_tile(width = pur_width, height = plo_height) +
