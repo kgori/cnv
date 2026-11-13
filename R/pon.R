@@ -371,6 +371,9 @@ PanelOfNormals = R6Class(
         #' used for denoising tumour logR.
         U = NULL,
 
+        #' @field V Result of Singular Value Decomposition of processed host read counts
+        V = NULL,
+
         #' @field D Singular Values of the decomposition
         D = NULL,
 
@@ -380,14 +383,33 @@ PanelOfNormals = R6Class(
         #' @param winsorization_quantile Values outside the quantile range set here
         #' (q, 1-q) are clamped to the values at those quantiles.
         #' Can be set to 0 to disable.
+        #' @param loci data.frame or data.table with columns CHROM, START, END, one row per
+        #' row of host_matrix.
         #' @param max_svs Maximum number of singular values to retain. The singular value
         #' decomposition is done using irlba
         initialize = function(
                 host_matrix,
+                loci,
                 panel_copynumber = NULL,
                 panel_ploidy = 2,
                 winsorization_quantile=0.001,
                 max_svs = 10) {
+            # Input validation
+            n_loci <- nrow(host_matrix)
+
+            if (!is.data.frame(loci) || nrow(loci) != n_loci ||
+                !all(c("CHROM", "START", "END") %in% names(loci))) {
+                stop("loci must be a data.frame or data.table with columns CHROM, START, END and one row per row of host_matrix")
+            }
+
+            if (is.null(panel_copynumber)) {
+                panel_copynumber <- rep(panel_ploidy)
+            }
+
+            if (length(panel_copynumber) != n_loci || anyNA(panel_copynumber) || any(panel_copynumber < 0)) {
+                stop("Panel copynumber must be the same same length as nrow(host_matrix), and be complete (no NA) and non-negative")
+            }
+
             stopifnot(winsorization_quantile >= 0 & winsorization_quantile <= 1)
 
             # Normalised panel
@@ -397,10 +419,6 @@ PanelOfNormals = R6Class(
             ref[ref == 0] <- 1
             self$panel_reference <- ref
             self$panel_ploidy <- panel_ploidy
-
-            if (is.null(panel_copynumber)) {
-                panel_copynumber <- rep(panel_ploidy)
-            }
 
             self$panel_copynumber <- panel_copynumber
 
@@ -421,9 +439,18 @@ PanelOfNormals = R6Class(
             # move to log space
             host_matrix <- apply(host_matrix, 2, safelog2)
 
+            # meanshift each chromosome
+            for (rows in split(seq_len(n_loci), loci$CHROM)) {
+                host_matrix[rows, ] <- sweep(host_matrix[rows, , drop = FALSE], 2,
+                                             colMeans(host_matrix[rows, , drop = FALSE], na.rm = TRUE), "-")
+            }
+
+            host_matrix[is.na(host_matrix)] <- 0
+
             # decompose
             decomp <- irlba(host_matrix, max_svs)
             self$U = decomp$u
+            self$V = decomp$v
             self$D = decomp$d
         },
 
