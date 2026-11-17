@@ -1,17 +1,17 @@
 Package: cnv
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
+Title: Copy Number Variation Estimation Tools
+Version: 1.0.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Kevin", "Gori",
+      email = "kcg25@cam.ac.uk",
       role = c("aut", "cre")
     )
   )
 Description: More about what it does (maybe more than one line).
     Continuation lines should be indented.
-License: What license is it under?
+License: The Unlicense
 Encoding: UTF-8
 LazyData: true
 Imports: matrixStats (>= 1.5.0), R6 (>= 2.6.0),

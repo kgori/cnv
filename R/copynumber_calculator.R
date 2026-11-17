@@ -47,6 +47,18 @@ CopyNumberCalculator <- R6Class(
         },
 
         #' @description
+        #' Reproduce the input `R` from the stored statistics
+        r = function(panel_copynumber, panel_ploidy) {
+            if (length(panel_copynumber) > 1 & length(panel_copynumber) != length(self$alpha)) {
+                stop("Supplied panel copynumber is not of a compatible length")
+            }
+            if (length(panel_ploidy) != 1 | panel_ploidy <=0) {
+                stop("Panel ploidy should be a single positive value")
+            }
+            self$alpha * panel_ploidy / panel_copynumber
+        }
+
+        #' @description
         #' Calculate tumour copy number for the given tumour purity, and tumour ploidy values.
         #' @param purity Tumour purity, between 0 and 1.
         #' @param ploidy Tumour ploidy, greater than 0.

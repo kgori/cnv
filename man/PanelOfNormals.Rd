@@ -6,10 +6,8 @@
 \description{
 Build this from a matrix of normal read counts (loci in rows, samples in columns). It
 is used to compute normalised read count ratios from external samples, usually tumours.
-It represents the idealised copy number of the organism, with no aberration. So for a
-diploid, the ploidy is 2, autosomal loci have a copy number of 2 and sex chromosomes
-have a copy number of 1, 2 or 0, depending on the sex. for this reason the panel should
-be sex-specific.
+It represents the idealised copy number of the organism, with no aberration. This class is intended
+for a single-sex panel, or one with no sex chromosomes
 
 Denoising:
 Implements a version of GATK's logR denoising using a panel of normals.
@@ -17,35 +15,23 @@ This is simplified compared to the GATK procedure, as it doesn't apply any filte
 data, except for an optional winsorization. As such, it is advisable to filter out rows of
 the host matrix that have very low or high coverage, or which have row-median of zero.
 }
-\section{Public fields}{
-  \if{html}{\out{<div class="r6-fields">}}
-  \describe{
-    \item{\code{panel_reference}}{Row medians of the input host read count matrix, or
-N^P / ψ^P}
-
-    \item{\code{panel_copynumber}}{The expected integer copy number of each locus for
-the organism represented by the panel.}
-
-    \item{\code{panel_ploidy}}{The expected average copy number of the organism, e.g. 2
-for diploid}
-
-    \item{\code{U}}{Result of Singular Value Decomposition of processed host read counts,
-used for denoising tumour logR.}
-
-    \item{\code{D}}{Singular Values of the decomposition}
-  }
-  \if{html}{\out{</div>}}
+\section{Super class}{
+\code{\link[cnv:MixedSexPanelOfNormals]{MixedSexPanelOfNormals}} -> \code{PanelOfNormals}
 }
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-PanelOfNormals-initialize}{\code{PanelOfNormals$new()}}
-    \item \href{#method-PanelOfNormals-ratio}{\code{PanelOfNormals$ratio()}}
-    \item \href{#method-PanelOfNormals-logR}{\code{PanelOfNormals$logR()}}
-    \item \href{#method-PanelOfNormals-denoised_logR}{\code{PanelOfNormals$denoised_logR()}}
     \item \href{#method-PanelOfNormals-clone}{\code{PanelOfNormals$clone()}}
   }
 }
+\if{html}{\out{<details open><summary>Inherited methods</summary>
+<ul>
+  <li><span class="pkg-link" data-pkg="cnv" data-topic="MixedSexPanelOfNormals" data-id="denoised_logR"><a href='../../cnv/html/MixedSexPanelOfNormals.html#method-MixedSexPanelOfNormals-denoised_logR'><code>MixedSexPanelOfNormals$denoised_logR()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="cnv" data-topic="MixedSexPanelOfNormals" data-id="logR"><a href='../../cnv/html/MixedSexPanelOfNormals.html#method-MixedSexPanelOfNormals-logR'><code>MixedSexPanelOfNormals$logR()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="cnv" data-topic="MixedSexPanelOfNormals" data-id="ratio"><a href='../../cnv/html/MixedSexPanelOfNormals.html#method-MixedSexPanelOfNormals-ratio'><code>MixedSexPanelOfNormals$ratio()</code></a></span></li>
+</ul>
+</details>}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PanelOfNormals-initialize"></a>}}
 \if{latex}{\out{\hypertarget{method-PanelOfNormals-initialize}{}}}
@@ -53,86 +39,25 @@ used for denoising tumour logR.}
   Constructor. Builds new PanelOfNormals using host read count matrix as input
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{PanelOfNormals$new(
-  host_matrix,
-  panel_copynumber = NULL,
-  panel_ploidy = 2,
-  winsorization_quantile = 0.001,
-  max_svs = 10
-)}
+    \preformatted{PanelOfNormals$new(host_matrix, loci, panel_copynumber, ...)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
       \item{\code{host_matrix}}{Matrix of read counts, with samples as columns.}
-      \item{\code{panel_copynumber}}{The expected integer copy number of each locus for
-the organism represented by the panel.}
-      \item{\code{panel_ploidy}}{The expected average copy number of the organism, e.g. 2
-for diploid}
-      \item{\code{winsorization_quantile}}{Values outside the quantile range set here
+      \item{\code{loci}}{data.frame or data.table with columns CHROM, START, END, one row per
+row of host_matrix.}
+      \item{\code{panel_copynumber}}{Numeric vector, expected copy number of each locus. If a single value,
+this is expanded into a vector of length nrow(host_matrix)}
+      \item{\code{...}}{Additional args: winsorization_quantile - Values outside the quantile range set here
 (q, 1-q) are clamped to the values at those quantiles.
-Can be set to 0 to disable.}
-      \item{\code{max_svs}}{Maximum number of singular values to retain. The singular value
-decomposition is done using irlba}
-    }
-    \if{html}{\out{</div>}}
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PanelOfNormals-ratio"></a>}}
-\if{latex}{\out{\hypertarget{method-PanelOfNormals-ratio}{}}}
-\subsection{\code{PanelOfNormals$ratio()}}{
-  Calculate standardized (not denoised) read count ratio (R) from tumour read counts
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{PanelOfNormals$ratio(tumour_matrix)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{tumour_matrix}}{Matrix of tumour read counts, samples in columns}
-    }
-    \if{html}{\out{</div>}}
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PanelOfNormals-logR"></a>}}
-\if{latex}{\out{\hypertarget{method-PanelOfNormals-logR}{}}}
-\subsection{\code{PanelOfNormals$logR()}}{
-  Calculate standardized (not denoised) logR from tumour read counts
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{PanelOfNormals$logR(tumour_matrix)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{tumour_matrix}}{Matrix of tumour read counts, samples in columns}
-    }
-    \if{html}{\out{</div>}}
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PanelOfNormals-denoised_logR"></a>}}
-\if{latex}{\out{\hypertarget{method-PanelOfNormals-denoised_logR}{}}}
-\subsection{\code{PanelOfNormals$denoised_logR()}}{
-  Calculate denoised logR from tumour read counts.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{PanelOfNormals$denoised_logR(tumour_matrix, num_svs)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{tumour_matrix}}{Matrix of tumour read counts, samples in columns}
-      \item{\code{num_svs}}{Number of singular values to use for denoising.}
+Can be set to 0 to disable.
+max_svs - Maximum number of singular values to retain. The singular value
+decomposition is done using irlba
+min_ref_samples - Warn if any locus has fewer than this many samples
+contributing to its reference.
+verbose - Print progress updates during construction}
     }
     \if{html}{\out{</div>}}
   }

@@ -21,8 +21,6 @@ n <- cnc$copynumber(purity, ploidy)
 \section{Public fields}{
   \if{html}{\out{<div class="r6-fields">}}
   \describe{
-    \item{\code{R}}{The read ratio}
-
     \item{\code{alpha}}{The alpha parameter for the copy number calculation.
 Computed once and reused for any purity and ploidy.}
 
