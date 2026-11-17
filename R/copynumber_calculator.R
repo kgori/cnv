@@ -48,6 +48,8 @@ CopyNumberCalculator <- R6Class(
 
         #' @description
         #' Reproduce the input `R` from the stored statistics
+        #' @param panel_copynumber The panel of normals panel copy number used to create this object
+        #' @param panel_ploidy The panel of normals panel ploidy used to create this object
         r = function(panel_copynumber, panel_ploidy) {
             if (length(panel_copynumber) > 1 & length(panel_copynumber) != length(self$alpha)) {
                 stop("Supplied panel copynumber is not of a compatible length")
@@ -56,7 +58,7 @@ CopyNumberCalculator <- R6Class(
                 stop("Panel ploidy should be a single positive value")
             }
             self$alpha * panel_ploidy / panel_copynumber
-        }
+        },
 
         #' @description
         #' Calculate tumour copy number for the given tumour purity, and tumour ploidy values.

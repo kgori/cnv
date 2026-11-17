@@ -33,6 +33,7 @@ Computed once and reused for any purity and ploidy.}
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CopyNumberCalculator-initialize}{\code{CopyNumberCalculator$new()}}
+    \item \href{#method-CopyNumberCalculator-r}{\code{CopyNumberCalculator$r()}}
     \item \href{#method-CopyNumberCalculator-copynumber}{\code{CopyNumberCalculator$copynumber()}}
     \item \href{#method-CopyNumberCalculator-clone}{\code{CopyNumberCalculator$clone()}}
   }
@@ -61,6 +62,26 @@ Computed once and reused for any purity and ploidy.}
       \item{\code{host_ploidy}}{The expected average autosomal copy number of the mixed host, e.g. 2 for diploid}
       \item{\code{panel_copynumber}}{The expected integer copy number of each locus for the panel of normals}
       \item{\code{panel_ploidy}}{The expected average copy number of the panel of normals}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CopyNumberCalculator-r"></a>}}
+\if{latex}{\out{\hypertarget{method-CopyNumberCalculator-r}{}}}
+\subsection{\code{CopyNumberCalculator$r()}}{
+  Reproduce the input `R` from the stored statistics
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CopyNumberCalculator$r(panel_copynumber, panel_ploidy)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{panel_copynumber}}{The panel of normals panel copy number used to create this object}
+      \item{\code{panel_ploidy}}{The panel of normals panel ploidy used to create this object}
     }
     \if{html}{\out{</div>}}
   }
