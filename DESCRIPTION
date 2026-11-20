@@ -1,7 +1,7 @@
 Package: cnv
 Type: Package
 Title: Copy Number Variation Estimation Tools
-Version: 1.0.1
+Version: 1.1.0
 Authors@R: c(
     person(
       "Kevin", "Gori",
